@@ -48,9 +48,12 @@ export async function exportToPDF(elementId: string, filename: string): Promise<
 
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
 
+        // Generate Blob
+        const blob = pdf.output('blob')
+        const blobUrl = URL.createObjectURL(blob)
+
         // Handle mobile in-app browsers blocking downloads
         if (navigator.share && navigator.canShare) {
-            const blob = pdf.output('blob')
             const file = new File([blob], `${filename}.pdf`, { type: 'application/pdf' })
 
             if (navigator.canShare({ files: [file] })) {
@@ -59,21 +62,36 @@ export async function exportToPDF(elementId: string, filename: string): Promise<
                         files: [file],
                         title: filename,
                     })
+                    URL.revokeObjectURL(blobUrl)
                     return // User successfully shared/saved it
                 } catch (err: any) {
-                    if (err.name === 'AbortError') return
-                    console.error('Share API failed:', err)
+                    if (err.name !== 'AbortError') console.error('Share API failed:', err)
                 }
             }
         }
 
-        // Standard download fallback
-        try {
-            pdf.save(`${filename}.pdf`)
-        } catch (saveErr) {
-            console.error('jsPDF save failed:', saveErr)
-            // Ultimate fallback for strict iOS/mobile browsers: open PDF directly in browser
-            window.location.href = pdf.output('datauristring')
+        // Standard Anchor Download Technique
+        const a = document.createElement('a')
+        a.style.display = 'none'
+        a.href = blobUrl
+        a.download = `${filename}.pdf`
+        document.body.appendChild(a)
+
+        // Trigger click
+        a.click()
+
+        // Cleanup
+        setTimeout(() => {
+            document.body.removeChild(a)
+            URL.revokeObjectURL(blobUrl)
+        }, 1000)
+
+        // For extremely strict mobile browsers (like iOS Safari in some modes), also try opening in the current window after a short delay
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (isIOS && !navigator.share) {
+            setTimeout(() => {
+                window.location.href = pdf.output('datauristring')
+            }, 500)
         }
 
     } catch (error: any) {
