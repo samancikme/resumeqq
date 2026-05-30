@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { FileText, BookUser } from 'lucide-react'
+import { FileText } from 'lucide-react'
 
 export function Header() {
     const linkCls = ({ isActive }: { isActive: boolean }) =>
@@ -22,10 +22,6 @@ export function Header() {
                     <NavLink to="/cv-generator" className={linkCls}>
                         <FileText className="h-4 w-4" />
                         <span className="hidden sm:inline">Rezyume</span>
-                    </NavLink>
-                    <NavLink to="/obyektivka" className={linkCls}>
-                        <BookUser className="h-4 w-4" />
-                        <span className="hidden sm:inline">Obyektivka</span>
                     </NavLink>
                 </nav>
             </div>

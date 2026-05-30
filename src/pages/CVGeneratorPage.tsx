@@ -5,9 +5,9 @@ import { ClassicTemplate } from '../components/cv-templates/ClassicTemplate'
 import { ModernTemplate } from '../components/cv-templates/ModernTemplate'
 import type { CVData } from '../lib/types'
 import { storage } from '../lib/storage'
-import { sampleCVData } from '../lib/sample-data'
+import { cvProfiles, sampleCVData } from '../lib/sample-data'
 import { exportToPDF } from '../lib/pdf-export'
-import { Download, Eye, EyeOff, LayoutTemplate } from 'lucide-react'
+import { Download, Eye, EyeOff, LayoutTemplate, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { useBlocker } from 'react-router-dom'
 
@@ -78,6 +78,23 @@ export function CVGeneratorPage() {
         toast.success('Rezyume saqlandı!')
     }
 
+    const handleProfileSelect = (profile: CVData) => {
+        const next = {
+            ...profile,
+            experience: profile.experience.map(item => ({ ...item })),
+            education: profile.education.map(item => ({ ...item })),
+            skills: [...profile.skills],
+        }
+        const nextTemplate = next.templateId as 'classic' | 'modern'
+
+        setData(next)
+        setTemplate(nextTemplate)
+        storage.saveCVData(next)
+        setInitialDataStr(JSON.stringify(next))
+        setIsDirty(false)
+        toast.success('Rezyume maǵlıwmatları júklendi!')
+    }
+
     const handleExport = async () => {
         try { await exportToPDF('cv-preview', `${data.fullName || 'resume'}-Rezyume`); toast.success('PDF júklenip alındı!') }
         catch { toast.error('PDF júklewde qátelik júz berdi') }
@@ -124,7 +141,32 @@ export function CVGeneratorPage() {
                 </div>
 
                 <div className={`grid gap-6 ${showPreview ? 'grid-cols-1 lg:grid-cols-[380px_1fr]' : 'grid-cols-1 max-w-xl mx-auto'}`}>
-                    <div><CVForm initialData={data} onChange={setData} onSave={handleSave} /></div>
+                    <div className="space-y-4">
+                        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="flex p-1.5 bg-indigo-50 rounded-lg">
+                                    <UserRound className="h-4 w-4 text-indigo-500" />
+                                </div>
+                                <h3 className="text-[15px] font-semibold text-gray-800">Tayyar rezyumeler</h3>
+                            </div>
+                            <div className="space-y-2">
+                                {cvProfiles.map(profile => (
+                                    <button
+                                        key={profile.fullName}
+                                        onClick={() => handleProfileSelect(profile)}
+                                        className={`w-full text-left rounded-xl border px-3 py-2.5 transition-colors ${data.fullName === profile.fullName
+                                            ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+                                            : 'border-gray-100 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                            }`}
+                                    >
+                                        <span className="block text-sm font-semibold leading-snug">{profile.fullName}</span>
+                                        <span className="block text-xs text-gray-500 mt-0.5">{profile.phone}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <CVForm initialData={data} onChange={setData} onSave={handleSave} />
+                    </div>
                     {showPreview && (
                         <div>
                             <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm sticky top-20">

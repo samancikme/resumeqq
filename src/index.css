@@ -12,8 +12,7 @@
 /* Force specific max widths during PDF generation (html2canvas reads print media) */
 @media print {
 
-  #cv-preview,
-  #obyektivka-preview {
+  #cv-preview {
     width: 800px !important;
     max-width: 800px !important;
     margin: 0 !important;
